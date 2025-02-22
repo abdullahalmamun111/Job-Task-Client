@@ -1,6 +1,6 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import { Link } from 'react-router-dom';
-
 const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-400 to-purple-500">
@@ -21,10 +21,10 @@ const Login = () => {
         
         <button className="w-full py-2 rounded-lg text-white bg-gradient-to-r from-cyan-400 to-pink-500 hover:opacity-90 transition">LOGIN</button>
         
-        <div className="flex justify-center gap-4 mt-4">
-          <button className="bg-blue-600 text-white p-2 rounded-full">F</button>
-          <button className="bg-blue-400 text-white p-2 rounded-full">T</button>
-          <button className="bg-red-500 text-white p-2 rounded-full">G</button>
+        <div className="flex justify-center mt-4">
+          <button className="bg-gray-900 text-white p-2 rounded-full">
+            <img className='w-12' src="https://img.icons8.com/?size=100&id=17949&format=png&color=000000" alt="" />
+          </button>
         </div>
         
         <p className="text-center text-sm mt-4">Or Sign Up Using</p>
