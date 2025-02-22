@@ -8,7 +8,7 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
-   <div className='bg-gray-900 text-white h-screen p-2'>
+   <div className=' h-screen p-2'>
     <Home></Home>
    </div>
   )
