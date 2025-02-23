@@ -1,4 +1,4 @@
-# React + Vite
+# Task Management
 
 This is a minimal setup to get React working with Vite, featuring hot module replacement (HMR) and ESLint configuration.
 
