@@ -12,6 +12,7 @@ import {
 import { app } from "../Firebase/firebase.config";
 
 export const ContextApi = createContext(null);
+
 const AuthContext = ({ children }) => {
   const auth = getAuth(app);
   const [user, setUser] = useState(null);

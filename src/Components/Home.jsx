@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import useAxiosPublic from "../AuthProvider/useAxiosPublic";
 import Swal from "sweetalert2";
 import { useQuery } from "@tanstack/react-query";
+import { ContextApi } from "../AuthProvider/AuthContext";
+import Navbar from "./Navbar";
+import { useNavigate } from "react-router-dom";
+import Loading from "./Loading";
 
 const categories = [
   { id: "todo", title: "🎯 To do" },
@@ -10,15 +14,16 @@ const categories = [
 ];
 
 const axiosPublic = useAxiosPublic();
+
 const Home = () => {
   const [category, setCategory] = useState("todo");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updateId, setUpdateId] = useState(null);
   const [isModalOpen1, setIsModalOpen1] = useState(false);
-
+  const { user,loading } = useContext(ContextApi);
+  const navigate = useNavigate();
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-
 
   const openModal1 = () => setIsModalOpen1(true);
   const closeModal1 = () => setIsModalOpen1(false);
@@ -32,16 +37,29 @@ const Home = () => {
     },
   });
 
+
+  useEffect(() => {
+    if (loading) return; 
+    if (!user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
   const handleForm = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+    // const formData = new FormData(form);
+    // const data = Object.fromEntries(formData.entries());
+    const title = form.title.value;
+    const description = form.description.value;
+    const category = form.category.value;
+    const email = user.email;
+    const data = {title,description,category,email};
     const res = await axiosPublic.post("/tasks", data);
     if (res.data.insertedId) {
       Swal.fire({
         title: "Done!",
-        text: `Your Task Added Successfully!`,
+        text: 'Your Task Added Successfully!',
         icon: "success",
       });
       form.reset();
@@ -55,27 +73,26 @@ const Home = () => {
     const form = e.target;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
-    console.log(data)
 
-    const res = await axiosPublic.patch(`/task/update/${updateId}`,data)
-    if(res.data.modifiedCount > 0){
+    const res = await axiosPublic.patch(`/task/update/${updateId}`, data);
+    if (res.data.modifiedCount > 0) {
       Swal.fire({
-              title: "Done!",
-              text: `Your Task Updated Successfully!`,
-              icon: "success"
-            });
+        title: "Done!",
+        text: 'Your Task Updated Successfully!',
+        icon: "success",
+      });
       form.reset();
       closeModal1();
-      refetch();      
+      refetch();
     }
-  }
+  };
 
   const handleUpdate = (id) => {
     openModal1();
-    setUpdateId(id)
+    setUpdateId(id);
   };
 
-  const handleDelete = async(id) => {
+  const handleDelete = async (id) => {
     Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -92,7 +109,7 @@ const Home = () => {
           Swal.fire({
             position: "top-end",
             icon: "success",
-            title: `Task Deleted Successfull`,
+            title: 'Task Deleted Successfull',
             showConfirmButton: false,
             timer: 1500,
           });
@@ -100,9 +117,14 @@ const Home = () => {
       }
     });
   };
-
+  if(loading){
+    return <Loading></Loading>
+  }
   return (
     <div className="container mx-auto py-4">
+      <div className="mb-5">
+        <Navbar></Navbar>
+      </div>
       <h1 className="text-3xl font-bold text-purple-600 text-center mb-2">
         Your Task Management App
       </h1>
@@ -215,124 +237,136 @@ const Home = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* To-Do Section */}
         <div className="">
           <div className="bg-gray-100 p-4 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">🎯 To do</h2>
           </div>
           <div className="grid grid-cols-1 gap-3 py-2">
-            {tasks
-              .filter((task) => task.category === "todo") // Filter tasks where category is "todo"
-              .map((task) => (
-                <div
-                  key={task._id}
-                  className="bg-white p-4 shadow-lg rounded-lg border-l-4 border-r-4 border-blue-500"
-                >
-                  {/* Task Title & Description */}
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {task.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {task.description}
-                  </p>
-
-                  {/* Buttons */}
-                  <div className="flex justify-between items-center mt-2">
-                    <button
-                      onClick={() => handleUpdate(task._id)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(task._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Delete
-                    </button>
+            {tasks.filter((task) => task.category === "todo").length === 0 ? (
+              <div className="text-center text-gray-500 py-4">
+                No tasks in "To-Do". Add a new task to get started!
+              </div>
+            ) : (
+              tasks
+                .filter((task) => task.category === "todo" && task.email == user.email)
+                .map((task) => (
+                  <div
+                    key={task._id}
+                    className="bg-white p-4 shadow-lg rounded-lg border-l-4 border-r-4 border-blue-500"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {task.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {task.description}
+                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <button
+                        onClick={() => handleUpdate(task._id)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         </div>
 
+        {/* Doing Section */}
         <div className="">
           <div className="bg-gray-100 p-4 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">🌟 Doing</h2>
           </div>
           <div className="grid grid-cols-1 gap-3 py-2">
-            {tasks
-              .filter((task) => task.category === "doing") // Filter tasks where category is "todo"
-              .map((task) => (
-                <div
-                  key={task._id}
-                  className="bg-white p-4 shadow-lg rounded-lg border-r-4 border-l-4 border-blue-500"
-                >
-                  {/* Task Title & Description */}
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {task.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {task.description}
-                  </p>
-
-                  {/* Buttons */}
-                  <div className="flex justify-between items-center mt-2">
-                    <button
-                      onClick={() => handleUpdate(task._id)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(task._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Delete
-                    </button>
+            {tasks.filter((task) => task.category === "doing").length === 0 ? (
+              <div className="text-center text-gray-500 py-4">
+                No tasks in "Doing". Start working on a task!
+              </div>
+            ) : (
+              tasks
+                .filter((task) => task.category === "doing" && task.email == user.email)
+                .map((task) => (
+                  <div
+                    key={task._id}
+                    className="bg-white p-4 shadow-lg rounded-lg border-r-4 border-l-4 border-blue-500"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {task.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {task.description}
+                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <button
+                        onClick={() => handleUpdate(task._id)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         </div>
 
+        {/* Done Section */}
         <div className="">
           <div className="bg-gray-100 p-4 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">✅ Done</h2>
           </div>
           <div className="grid grid-cols-1 gap-3 py-2">
-            {tasks
-              .filter((task) => task.category === "done") // Filter tasks where category is "todo"
-              .map((task) => (
-                <div
-                  key={task._id}
-                  className="bg-white p-4 shadow-lg rounded-lg border-r-4 border-l-4 border-blue-500"
-                >
-                  {/* Task Title & Description */}
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {task.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {task.description}
-                  </p>
-
-                  {/* Buttons */}
-                  <div className="flex justify-between items-center mt-2">
-                    <button
-                      onClick={() => handleUpdate(task._id)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(task._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Delete
-                    </button>
+            {tasks.filter((task) => task.category === "done").length === 0 ? (
+              <div className="text-center text-gray-500 py-4">
+                No tasks in "Done". Complete a task to see it here!
+              </div>
+            ) : (
+              tasks
+                .filter((task) => task.category === "done" && task.email == user.email)
+                .map((task) => (
+                  <div
+                    key={task._id}
+                    className="bg-white p-4 shadow-lg rounded-lg border-r-4 border-l-4 border-blue-500"
+                  >
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      {task.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {task.description}
+                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <button
+                        onClick={() => handleUpdate(task._id)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task._id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         </div>
       </div>

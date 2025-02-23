@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./Components/Login.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Home from "./Components/Home.jsx";
+import AuthContext from "./AuthProvider/AuthContext.jsx";
 
 const queryClient = new QueryClient();
 
@@ -22,8 +23,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <AuthContext>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
     </QueryClientProvider>
+    </AuthContext>
   </StrictMode>
 );
